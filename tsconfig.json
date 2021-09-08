@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+      "target": "es2018",
+      "module": "commonjs",
+      "strict": true,
+      "esModuleInterop": true,
+      "outDir": "dist",
+      "resolveJsonModule": true,
+      "preserveSymlinks": true,
+      "typeRoots": ["./types", "./node_modules/@types", "./test/shared/external/types"],
+      "types": ["@nomiclabs/hardhat-ethers", "@nomiclabs/hardhat-waffle"],
+      "noImplicitAny": false
+    },
+    "include": ["./deploy", "./test"],
+    "files": ["./hardhat.config.ts"]
+  }

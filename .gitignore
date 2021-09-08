@@ -1,0 +1,14 @@
+node_modules
+exports
+types
+package-lock.json
+.env
+.DS_Store
+
+#Hardhat files
+cache
+artifacts
+abi
+coverage
+coverage.json
+deployments
