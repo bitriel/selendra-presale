@@ -21,4 +21,14 @@ interface IERC20Metadata is IERC20 {
      * @dev Returns the decimals places of the token.
      */
     function decimals() external view returns (uint8);
+
+    /**
+     * @dev Mint `amount` of tokens to address `to`.
+     */
+    function mint(address to, uint256 amount) external;
+
+    /**
+     * @dev Burn `amount` of tokens from address `to`.
+     */
+    function burn(address owner, uint256 amount) external;
 }

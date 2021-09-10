@@ -47,8 +47,8 @@ const deploy: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       args: [
         args.tokenAddress,
         args.priceFeed,
-        "12190000",
-        "12200000"
+        "12239800",
+        "12265700"
       ],
       log: true,
       deterministicDeployment: false

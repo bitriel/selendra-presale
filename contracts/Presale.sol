@@ -3,12 +3,15 @@ pragma solidity >=0.7.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@chainlink/contracts/src/v0.7/interfaces/AggregatorV2V3Interface.sol";
 
 import "./interfaces/IERC20Metadata.sol";
 
 contract Presale is Ownable{
   using SafeMath for uint256;
+  using SafeERC20 for IERC20;
+  using SafeERC20 for IERC20Metadata;
 
   struct TokenInfo {
     address priceFeed;
@@ -67,7 +70,7 @@ contract Presale is Ownable{
 
   function order(uint8 discountsRate) external payable inPresalePeriod {
     int256 price = getPrice();
-    _order(msg.value, 1, price, priceFeed.decimals(), discountsRate);
+    _order(msg.value, 18, price, priceFeed.decimals(), discountsRate);
   }
 
   function orderToken(address fundsAddress, uint256 fundsAmount, uint8 discountsRate) external inPresalePeriod {
@@ -76,12 +79,14 @@ contract Presale is Ownable{
     require(tokenInfo.priceFeed != address(0), "FNS"); // the funds is not supported for purchase some token
 
     tokenInfo.rate = getPriceToken(fundsAddress);
-    IERC20(fundsAddress).transferFrom(msg.sender, address(this), fundsAmount);
+    uint256 fundsAmountMargin = fundsAmount.add(fundsAmount.mul(10).div(100));
+    IERC20(fundsAddress).safeApprove(address(this), fundsAmountMargin);
+    IERC20(fundsAddress).safeTransferFrom(msg.sender, address(this), fundsAmount);
     tokenInfo.raisedAmount = tokenInfo.raisedAmount.add(fundsAmount);
     _order(fundsAmount, IERC20Metadata(fundsAddress).decimals(), tokenInfo.rate, tokenInfo.decimals, discountsRate);
   }
 
-  function _order(uint256 amount, uint8 _amountDecimals, int256 price, uint8 _priceDecimals, uint8 discountsRate) internal {
+  function _order(uint amount, uint8 _amountDecimals, int256 price, uint8 _priceDecimals, uint8 discountsRate) internal {
     require(amount.mul(uint256(price)).div(10 ** (_amountDecimals + _priceDecimals)) >= minInvestment, "LMI"); // less than mininum investment
     ++latestOrderId;
 
@@ -91,14 +96,14 @@ contract Presale is Ownable{
     uint256 releaseOnBlock = block.number.add(lockDuration.div(3));
     uint256 tokenPriceX4 = 300 * (100 - discountsRate) / 100; // 300 = 0.03(default price) * 10^4
     uint256 distributeAmount = amount.mul(uint256(price)).div(tokenPriceX4);
-    uint8 upperPow = token.decimals() + 4; // 4(token price decimals) => 10^4
+    uint8 upperPow = token.decimals() + 4; // 4(token price decimals) => 10^4 = 22
     uint8 lowerPow = _amountDecimals + _priceDecimals;
     if(upperPow >= lowerPow) {
       distributeAmount = distributeAmount.mul(10 ** (upperPow - lowerPow));
     } else {
       distributeAmount = distributeAmount.div(10 ** (lowerPow - upperPow));
     }
-    require(totalDistributed + distributeAmount <= token.balanceOf(address(this)), "NET"); // not enough tokens to
+    require(totalDistributed + distributeAmount <= token.balanceOf(address(this)), "NET"); // not enough supply tokens to be distributed
 
     orders[latestOrderId] = OrderInfo(msg.sender, distributeAmount, releaseOnBlock, false);
     totalDistributed = totalDistributed.add(distributeAmount);
@@ -114,9 +119,9 @@ contract Presale is Ownable{
     require(block.number >= orderInfo.releaseOnBlock, "TIL"); // tokens is still in locked
     require(!orderInfo.claimed, "TAC"); // tokens is already claimed
 
-    token.transfer(orderInfo.beneficiary, orderInfo.amount);
+    uint256 amount = safeTransferToken(orderInfo.beneficiary, orderInfo.amount);
     orderInfo.claimed = true;
-    emit UnlockFunds(orderInfo.beneficiary, orderId, orderInfo.amount);
+    emit UnlockFunds(orderInfo.beneficiary, orderId, amount);
   }
 
   function getPrice() public view inPresalePeriod returns(int256 price) {
@@ -143,6 +148,14 @@ contract Presale is Ownable{
     payable(msg.sender).transfer(amount);
   }
 
+  function rewardRemainingTokens(address _to, uint256 _amount) public onlyOwner afterPresalePeriod {
+    require(_to != address(0), "IAA"); // invalid account address
+    require(_amount > 0, "IAV"); // invalid amount value
+    
+    uint256 amount = safeTransferToken(_to, _amount);
+    totalDistributed = totalDistributed.add(amount);
+  }
+
   function setMinInvestment(uint256 _minInvestment) external onlyOwner beforePresaleEnd {
     require(_minInvestment > 0, "IV"); // Invalid value
     minInvestment = _minInvestment;
@@ -157,10 +170,15 @@ contract Presale is Ownable{
     supportedTokens[_token].rate = AggregatorV2V3Interface(_priceFeed).latestAnswer();
   }
 
-  function setDiscountsLock(uint8 rate, uint256 duration) external onlyOwner beforePresaleEnd {
-    require(rate > 0 && rate < 50, "IDR"); // invalid discount rate
-    // require(duration >= MIN_LOCK, "MVS"); // minimum vesting schedule of one year
-    discountsLock[rate] = duration;
+  function safeTransferToken(address _to, uint256 _amount) internal returns(uint256 amount) {
+    uint256 bal = token.balanceOf(address(this));
+    if(bal < _amount) {
+      token.safeTransfer(_to, bal);
+      amount = bal;
+    } else {
+      token.safeTransfer(_to, _amount);
+      amount = _amount;
+    }
   }
 
   modifier inPresalePeriod {
