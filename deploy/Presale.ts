@@ -47,15 +47,19 @@ const deploy: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       args: [
         args.tokenAddress,
         args.priceFeed,
-        "12239800",
-        "12265700"
+        "12301500",
+        "12330300"
       ],
       log: true,
       deterministicDeployment: false
     })
 
     const presale = await ethers.getContract("Presale") as Presale
-    args.supportedTokens?.forEach(async token => await (await presale.setSupportedToken(token.tokenAddress, token.priceFeed)).wait())
+    if(args.supportedTokens) {
+      await Promise.all(args.supportedTokens?.map(
+        token => presale.setSupportedToken(token.tokenAddress, token.priceFeed)
+      ))
+    }
   }
 }
 

@@ -7,7 +7,7 @@ package-lock.json
 
 #Hardhat files
 cache
-artifacts
+# artifacts
 abi
 coverage
 coverage.json

@@ -1,6 +1,6 @@
 {
-  "name": "selendra-presale",
-  "version": "1.0.0",
+  "name": "@bitriel/selendra-presale",
+  "version": "0.1.0",
   "license": "GPL-3.0",
   "description": "Pre-Sale Smart Contracts on Bitriel Protocol",
   "homepage": "https://dapp.bitriel.com/sel-pre-sale",
@@ -12,7 +12,6 @@
     "smart-contracts"
   ],
   "files": [
-    "abi",
     "artifacts/contracts/**/*.json",
     "!artifacts/contracts/**/*.dbg.json",
     "!artifacts/contracts/test/**/*",

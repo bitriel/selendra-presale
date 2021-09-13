@@ -26,7 +26,7 @@ contract Presale is Ownable{
     bool claimed;
   }
 
-  uint256 private constant MIN_LOCK = 365 days;
+  uint256 private constant MIN_LOCK = 7 minutes; //365 days;
   /// @dev discountsLock[rate] = durationInSeconds
   mapping(uint8 => uint256) public discountsLock;
   /// @dev supportedTokens[tokenAddress] = TokenInfo
@@ -62,10 +62,9 @@ contract Presale is Ownable{
     notAfterBlock = _notAfterBlock;
 
     // initialize discounts rate lock duration
-    discountsLock[10] = 12 minutes;
-    // discountsLock[10] = MIN_LOCK;
-    // discountsLock[20] = 2 * MIN_LOCK;
-    // discountsLock[30] = 3 * MIN_LOCK;
+    discountsLock[10] = MIN_LOCK;
+    discountsLock[20] = 2 * MIN_LOCK;
+    discountsLock[30] = 3 * MIN_LOCK;
   }
 
   function order(uint8 discountsRate) external payable inPresalePeriod {
@@ -89,9 +88,9 @@ contract Presale is Ownable{
   function _order(uint amount, uint8 _amountDecimals, int256 price, uint8 _priceDecimals, uint8 discountsRate) internal {
     require(amount.mul(uint256(price)).div(10 ** (_amountDecimals + _priceDecimals)) >= minInvestment, "LMI"); // less than mininum investment
     ++latestOrderId;
-
+    
     uint256 lockDuration = discountsLock[discountsRate];
-    // require(lockDuration >= MIN_LOCK, "NDR");
+    require(lockDuration >= MIN_LOCK, "NDR"); // lock duration not exist or lower than minimum lock
 
     uint256 releaseOnBlock = block.number.add(lockDuration.div(3));
     uint256 tokenPriceX4 = 300 * (100 - discountsRate) / 100; // 300 = 0.03(default price) * 10^4
