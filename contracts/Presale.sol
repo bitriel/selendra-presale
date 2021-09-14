@@ -7,8 +7,9 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@chainlink/contracts/src/v0.7/interfaces/AggregatorV2V3Interface.sol";
 
 import "./interfaces/IERC20Metadata.sol";
+import "./interfaces/IPreIDOBase.sol";
 
-contract Presale is Ownable{
+contract Presale is IPreIDOBase, Ownable {
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
   using SafeERC20 for IERC20Metadata;
@@ -34,7 +35,7 @@ contract Presale is Ownable{
   // /// @dev contributedBalance[userAddress][tokenAddress] = balance
   // mapping(address => mapping(address => uint256)) public contributedBalance;
   /// @dev orders[orderId] = OrderInfo
-  mapping(uint256 => OrderInfo) public orders;
+  mapping(uint256 => OrderInfo) public override orders;
   /// @dev The latest order id for tracking order info
   uint256 private latestOrderId = 0;
   /// @notice The total amount of tokens had been distributed 
@@ -42,16 +43,13 @@ contract Presale is Ownable{
   /// @notice The minimum investment funds for purchasing tokens in USD
   uint256 public minInvestment;
   /// @notice The token used for pre-sale
-  IERC20Metadata public immutable token;
+  IERC20Metadata public immutable override token;
   /// @dev The price feed address of native token
   AggregatorV2V3Interface internal immutable priceFeed;
   /// @notice The block number before starting the presale purchasing
   uint256 public immutable notBeforeBlock;
   /// @notice The block number after ending the presale purchasing
   uint256 public immutable notAfterBlock;
-
-  event LockFunds(address indexed sender, uint256 id, uint256 amount, uint256 lockOnBlock, uint256 releaseOnBlock);   
-  event UnlockFunds(address indexed receiver, uint256 id, uint256 amount);
 
   constructor(address _token, address _priceFeed, uint256 _notBeforeBlock, uint256 _notAfterBlock) {
     require(_token != address(0) && _priceFeed != address(0), "ICA"); // invalid contract address
@@ -78,8 +76,6 @@ contract Presale is Ownable{
     require(tokenInfo.priceFeed != address(0), "FNS"); // the funds is not supported for purchase some token
 
     tokenInfo.rate = getPriceToken(fundsAddress);
-    uint256 fundsAmountMargin = fundsAmount.add(fundsAmount.mul(10).div(100));
-    IERC20(fundsAddress).safeApprove(address(this), fundsAmountMargin);
     IERC20(fundsAddress).safeTransferFrom(msg.sender, address(this), fundsAmount);
     tokenInfo.raisedAmount = tokenInfo.raisedAmount.add(fundsAmount);
     _order(fundsAmount, IERC20Metadata(fundsAddress).decimals(), tokenInfo.rate, tokenInfo.decimals, discountsRate);
@@ -107,11 +103,12 @@ contract Presale is Ownable{
     orders[latestOrderId] = OrderInfo(msg.sender, distributeAmount, releaseOnBlock, false);
     totalDistributed = totalDistributed.add(distributeAmount);
 
-    emit LockFunds(msg.sender, latestOrderId, distributeAmount, block.number, releaseOnBlock);
+    emit LockTokens(msg.sender, latestOrderId, distributeAmount, block.number, releaseOnBlock);
   }
 
   function redeem(uint256 orderId) external {
     require(orderId <= latestOrderId, "IOI"); // incorrect order id
+
     OrderInfo storage orderInfo = orders[orderId];
     require(msg.sender == orderInfo.beneficiary, "NOO"); // not order beneficiary
     require(orderInfo.amount > 0, "ITA"); // insufficient token amount to redeem
@@ -120,7 +117,8 @@ contract Presale is Ownable{
 
     uint256 amount = safeTransferToken(orderInfo.beneficiary, orderInfo.amount);
     orderInfo.claimed = true;
-    emit UnlockFunds(orderInfo.beneficiary, orderId, amount);
+
+    emit UnlockTokens(orderInfo.beneficiary, orderId, amount);
   }
 
   function getPrice() public view inPresalePeriod returns(int256 price) {
