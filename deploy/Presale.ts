@@ -1,6 +1,6 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
-import { Presale } from "../types"
+// import { Presale } from "../types"
 
 type ArgsType = {
   tokenAddress: string;
@@ -47,19 +47,19 @@ const deploy: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       args: [
         args.tokenAddress,
         args.priceFeed,
-        "12320350",
+        "12381650",
         "12521950"
       ],
       log: true,
       deterministicDeployment: false
     })
 
-    const presale = await ethers.getContract("Presale") as Presale
-    if(args.supportedTokens) {
-      await Promise.all(args.supportedTokens?.map(
-        token => presale.setSupportedToken(token.tokenAddress, token.priceFeed)
-      ))
-    }
+    // const presale = await ethers.getContract("Presale") as Presale
+    // if(args.supportedTokens) {
+    //   await Promise.all(args.supportedTokens.map(
+    //     token => presale.setSupportedToken(token.tokenAddress, token.priceFeed)
+    //   ))
+    // }
   }
 }
 

@@ -17,4 +17,14 @@ interface IPreIDOState {
     uint256 releaseOnBlock,
     bool claimed
   );
+
+  /// @notice Look up all order IDs that a specific `investor` address has been order in the pre-IDO contract
+  /// @param investor The investor address to look up
+  /// @return ids All order IDs that the `investor` has been order
+  function investorOrderIds(address investor) external view returns(uint256[] memory ids);
+
+  /// @notice Look up locked-balance of a specific `investor` address in the pre-IDO contract
+  /// @param investor The investor address to look up
+  /// @return balance The locked-balance of the `investor`
+  function balanceOf(address investor) external view returns(uint256 balance);
 }

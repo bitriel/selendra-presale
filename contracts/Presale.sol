@@ -32,8 +32,10 @@ contract Presale is IPreIDOBase, Ownable {
   mapping(uint8 => uint256) public discountsLock;
   /// @dev supportedTokens[tokenAddress] = TokenInfo
   mapping(address => TokenInfo) public supportedTokens;
-  // /// @dev contributedBalance[userAddress][tokenAddress] = balance
-  // mapping(address => mapping(address => uint256)) public contributedBalance;
+  /// @dev balanceOf[investor] = balance
+  mapping(address => uint256) public override balanceOf;
+  /// @dev orderIds[investor] = array of order ids
+  mapping(address => uint256[]) private orderIds;
   /// @dev orders[orderId] = OrderInfo
   mapping(uint256 => OrderInfo) public override orders;
   /// @dev The latest order id for tracking order info
@@ -63,6 +65,11 @@ contract Presale is IPreIDOBase, Ownable {
     discountsLock[10] = MIN_LOCK;
     discountsLock[20] = 2 * MIN_LOCK;
     discountsLock[30] = 3 * MIN_LOCK;
+  }
+
+  function investorOrderIds(address investor) external view override returns(uint256[] memory ids) {
+    uint256[] memory arr = orderIds[investor];
+    return arr;
   }
 
   function order(uint8 discountsRate) external payable inPresalePeriod {
@@ -102,6 +109,8 @@ contract Presale is IPreIDOBase, Ownable {
 
     orders[latestOrderId] = OrderInfo(msg.sender, distributeAmount, releaseOnBlock, false);
     totalDistributed = totalDistributed.add(distributeAmount);
+    balanceOf[msg.sender] = balanceOf[msg.sender].add(distributeAmount);
+    orderIds[msg.sender].push(latestOrderId);
 
     emit LockTokens(msg.sender, latestOrderId, distributeAmount, block.number, releaseOnBlock);
   }
@@ -117,6 +126,7 @@ contract Presale is IPreIDOBase, Ownable {
 
     uint256 amount = safeTransferToken(orderInfo.beneficiary, orderInfo.amount);
     orderInfo.claimed = true;
+    balanceOf[msg.sender] = balanceOf[msg.sender].sub(amount);
 
     emit UnlockTokens(orderInfo.beneficiary, orderId, amount);
   }

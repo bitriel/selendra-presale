@@ -23,6 +23,10 @@ contract PrivateSale is IPreIDOBase, Ownable {
   uint256 public constant LOCK_DURATION = 7 minutes; // 2 * 365 days;
   /// @dev the default token price for private sale in 4 decimals
   uint256 public constant TOKEN_PRICEX4 = 165; // // 165 = 0.0165 * 10^4
+  /// @dev balanceOf[investor] = balance
+  mapping(address => uint256) public override balanceOf;
+  /// @dev orderIds[investor] = array of order ids
+  mapping(address => uint256[]) private orderIds;
   /// @dev orders[orderId] = OrderInfo
   mapping(uint256 => OrderInfo) public override orders;
   /// @dev The latest order id for tracking order info
@@ -39,6 +43,11 @@ contract PrivateSale is IPreIDOBase, Ownable {
     token = IERC20Metadata(_token);
   }
 
+  function investorOrderIds(address investor) external view override returns(uint256[] memory ids) {
+    uint256[] memory arr = orderIds[investor];
+    return arr;
+  }
+
   function order(address recipient, uint256 amount) external onlyOwner {
     require(recipient != address(0), "IIA"); // invalid investor address
     require(amount > 0, "ITA"); // invalid token amount
@@ -52,6 +61,8 @@ contract PrivateSale is IPreIDOBase, Ownable {
 
     orders[++latestOrderId] = OrderInfo(recipient, amount, releaseOnBlock, false);
     totalDistributed = totalDistributed.add(amount);
+    balanceOf[recipient] = balanceOf[recipient].add(amount);
+    orderIds[recipient].push(latestOrderId);
     fundsRaisedX8 = fundsRaisedX8.add(funds);
 
     emit LockTokens(recipient, latestOrderId, amount, block.number, releaseOnBlock);
@@ -68,6 +79,7 @@ contract PrivateSale is IPreIDOBase, Ownable {
     
     token.safeTransfer(orderInfo.beneficiary, orderInfo.amount);
     orderInfo.claimed = true;
+    balanceOf[orderInfo.beneficiary] = balanceOf[orderInfo.beneficiary].sub(orderInfo.amount);
 
     emit UnlockTokens(orderInfo.beneficiary, orderId, orderInfo.amount);
   }
