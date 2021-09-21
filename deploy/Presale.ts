@@ -1,6 +1,6 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
-// import { Presale } from "../types"
+import { Presale } from "../types"
 
 type ArgsType = {
   tokenAddress: string;
@@ -9,6 +9,28 @@ type ArgsType = {
 }
 
 const ARGS: {[chainId: string]: ArgsType} = {
+  "56": {
+    tokenAddress: "0x30bab6b88db781129c6a4e9b7926738e3314cf1c", // SEL
+    priceFeed: "0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE", // BNB/USD
+    supportedTokens: [
+      {
+        tokenAddress: "0xe9e7cea3dedca5984780bafc599bd69add087d56", // BUSD
+        priceFeed: "0xcBb98864Ef56E9042e7d2efef76141f15731B82f" // BUSD/USD
+      },
+      {
+        tokenAddress: "0x1af3f329e8be154074d8769d1ffa4ee058b1dbc3", // DAI
+        priceFeed: "0x132d3C0B1D2cEa0BC552588063bdBb210FDeecfA" // DAI/USD
+      },
+      {
+        tokenAddress: "0x55d398326f99059fF775485246999027B3197955", // USDT
+        priceFeed: "0xB97Ad0E74fa7d920791E90258A6E2085088b4320" // USDT/USD
+      },
+      {
+        tokenAddress: "0x2170ed0880ac9a755fd29b2688956bd959f933f8", // ETH
+        priceFeed: "0x9ef1B8c0E4F7dc8bF5719Ea496883DC6401d5b2e" // ETH/USD
+      }
+    ]
+  },
   "97": {
     tokenAddress: "0xDED2DEDf0cF48033cb50a4EF3e7587bAbc227151", // KUM
     priceFeed: "0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526", // BNB/USD
@@ -47,19 +69,23 @@ const deploy: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       args: [
         args.tokenAddress,
         args.priceFeed,
-        "12381650",
-        "12521950"
+        "12560000",
+        "12671000"
       ],
       log: true,
       deterministicDeployment: false
     })
+    console.log("\n========= The Deployment has been successfully ============\n")
 
-    // const presale = await ethers.getContract("Presale") as Presale
-    // if(args.supportedTokens) {
-    //   await Promise.all(args.supportedTokens.map(
-    //     token => presale.setSupportedToken(token.tokenAddress, token.priceFeed)
-    //   ))
-    // }
+    const presale = await ethers.getContract("Presale") as Presale
+    if(args.supportedTokens) {
+      for(let i=0; i<args.supportedTokens.length; i++) {
+        console.log("========= Setting Supported Token ============")
+        console.log(`========= Token Address: ${args.supportedTokens[i].tokenAddress} ============`)
+        console.log(`========= Price Feed Address: ${args.supportedTokens[i].priceFeed} ============\n`)
+        await presale.setSupportedToken(args.supportedTokens[i].tokenAddress, args.supportedTokens[i].priceFeed).then(tx => tx.wait())
+      }
+    }
   }
 }
 
