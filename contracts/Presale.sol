@@ -155,14 +155,6 @@ contract Presale is IPreIDOBase, Ownable {
     payable(msg.sender).transfer(amount);
   }
 
-  function rewardRemainingTokens(address _to, uint256 _amount) public onlyOwner afterPresalePeriod {
-    require(_to != address(0), "IAA"); // invalid account address
-    require(_amount > 0, "IAV"); // invalid amount value
-    
-    uint256 amount = safeTransferToken(_to, _amount);
-    totalDistributed = totalDistributed.add(amount);
-  }
-
   function setMinInvestment(uint256 _minInvestment) external onlyOwner beforePresaleEnd {
     require(_minInvestment > 0, "IV"); // Invalid value
     minInvestment = _minInvestment;

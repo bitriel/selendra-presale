@@ -8,6 +8,8 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./interfaces/IERC20Metadata.sol";
 import "./interfaces/IPreIDOBase.sol";
 
+// TODO: set releaseOnBlock to fixed block
+
 contract PrivateSale is IPreIDOBase, Ownable {
   using SafeMath for uint256;
   using SafeERC20 for IERC20Metadata;
@@ -31,7 +33,7 @@ contract PrivateSale is IPreIDOBase, Ownable {
   mapping(uint256 => OrderInfo) public override orders;
   /// @dev The latest order id for tracking order info
   uint256 private latestOrderId = 0;
-  /// @notice The token used for pre-sale
+  /// @notice The token used for private sale
   IERC20Metadata public immutable override token;
   /// @notice The total amount of tokens had been distributed 
   uint256 public totalDistributed;
@@ -82,5 +84,12 @@ contract PrivateSale is IPreIDOBase, Ownable {
     balanceOf[orderInfo.beneficiary] = balanceOf[orderInfo.beneficiary].sub(orderInfo.amount);
 
     emit UnlockTokens(orderInfo.beneficiary, orderId, orderInfo.amount);
+  }
+
+  function rewardInvestor(address _to, uint256 _amount) public onlyOwner {
+    require(_to != address(0), "IAA"); // invalid account address
+    require(_amount > 0, "IAV"); // invalid amount value
+    
+    token.safeTransferFrom(msg.sender, _to, _amount);
   }
 }
