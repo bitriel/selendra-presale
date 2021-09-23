@@ -27,7 +27,7 @@ contract Presale is IPreIDOBase, Ownable {
     bool claimed;
   }
 
-  uint256 private constant MIN_LOCK = 7 minutes; //365 days;
+  uint256 private constant MIN_LOCK = 365 days; // 1 year;
   /// @dev discountsLock[rate] = durationInSeconds
   mapping(uint8 => uint256) public discountsLock;
   /// @dev supportedTokens[tokenAddress] = TokenInfo

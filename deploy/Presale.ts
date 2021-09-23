@@ -5,6 +5,7 @@ import { Presale } from "../types"
 type ArgsType = {
   tokenAddress: string;
   priceFeed: string;
+  minInvestment?: number,
   supportedTokens?: ArgsType[];
 }
 
@@ -12,6 +13,7 @@ const ARGS: {[chainId: string]: ArgsType} = {
   "56": {
     tokenAddress: "0x30bab6b88db781129c6a4e9b7926738e3314cf1c", // SEL
     priceFeed: "0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE", // BNB/USD
+    minInvestment: 1000,
     supportedTokens: [
       {
         tokenAddress: "0xe9e7cea3dedca5984780bafc599bd69add087d56", // BUSD
@@ -34,6 +36,7 @@ const ARGS: {[chainId: string]: ArgsType} = {
   "97": {
     tokenAddress: "0xDED2DEDf0cF48033cb50a4EF3e7587bAbc227151", // KUM
     priceFeed: "0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526", // BNB/USD
+    minInvestment: 1,
     supportedTokens: [
       {
         tokenAddress: "0xeD24FC36d5Ee211Ea25A80239Fb8C4Cfd80f12Ee", // BUSD
@@ -69,8 +72,8 @@ const deploy: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       args: [
         args.tokenAddress,
         args.priceFeed,
-        "12560000",
-        "12671000"
+        "11371945",
+        "12696745"
       ],
       log: true,
       deterministicDeployment: false
@@ -78,6 +81,11 @@ const deploy: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log("\n========= The Deployment has been successfully ============\n")
 
     const presale = await ethers.getContract("Presale") as Presale
+    if(args.minInvestment) {
+      console.log(`========= Setting Minimum Investment: $${args.minInvestment} ============\n`)
+      await presale.setMinInvestment(args.minInvestment).then(tx => tx.wait())
+    }
+
     if(args.supportedTokens) {
       for(let i=0; i<args.supportedTokens.length; i++) {
         console.log("========= Setting Supported Token ============")
