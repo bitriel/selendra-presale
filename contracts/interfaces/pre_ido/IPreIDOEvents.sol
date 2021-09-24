@@ -8,8 +8,8 @@ interface IPreIDOEvents {
   /// @param sender The sender address whose the locked tokens belong
   /// @param id The order ID used to tracking order information
   /// @param amount The amount of tokens to be locked
-  /// @param lockOnBlock The block number when tokens locked inside the pre-IDO
-  /// @param releaseOnBlock The block number when tokens can be redeem or claimed from the time-locked contract
+  /// @param lockOnBlock The block timestamp when tokens locked inside the pre-IDO
+  /// @param releaseOnBlock The block timestamp when tokens can be redeem or claimed from the time-locked contract
   event LockTokens(address indexed sender, uint256 indexed id, uint256 amount, uint256 lockOnBlock, uint256 releaseOnBlock);   
 
   /// @notice Emitted when tokens is unlocked or claimed by `receiver` from the time-locked contract

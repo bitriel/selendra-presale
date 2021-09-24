@@ -54,7 +54,7 @@ contract PrivateSale is IPreIDOBase, Ownable {
     require(recipient != address(0), "IIA"); // invalid investor address
     require(amount > 0, "ITA"); // invalid token amount
 
-    uint256 releaseOnBlock = block.number.add(LOCK_DURATION.div(3));
+    uint256 releaseOnBlock = block.timestamp.add(LOCK_DURATION);
     // 4: priceDecimals, 8: fundsRaisedDecimals
     uint256 funds = amount.mul(TOKEN_PRICEX4).div(10 ** (token.decimals() + 4 - 8));
 
@@ -67,7 +67,7 @@ contract PrivateSale is IPreIDOBase, Ownable {
     orderIds[recipient].push(latestOrderId);
     fundsRaisedX8 = fundsRaisedX8.add(funds);
 
-    emit LockTokens(recipient, latestOrderId, amount, block.number, releaseOnBlock);
+    emit LockTokens(recipient, latestOrderId, amount, block.timestamp, releaseOnBlock);
   }
 
   function redeem(uint256 orderId) external {
@@ -76,7 +76,7 @@ contract PrivateSale is IPreIDOBase, Ownable {
     OrderInfo storage orderInfo = orders[orderId];
     require(msg.sender == orderInfo.beneficiary || msg.sender == owner(), "NOO"); // not order beneficiary or owner of contract
     require(orderInfo.amount > 0, "ITA"); // insufficient token amount to redeem
-    require(block.number >= orderInfo.releaseOnBlock, "TIL"); // tokens is still in locked
+    require(block.timestamp >= orderInfo.releaseOnBlock, "TIL"); // tokens is still in locked
     require(!orderInfo.claimed, "TAC"); // tokens is already claimed
     
     token.safeTransfer(orderInfo.beneficiary, orderInfo.amount);

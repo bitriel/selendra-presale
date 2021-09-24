@@ -9,7 +9,7 @@ interface IPreIDOState {
   /// @param id The order ID to look up
   /// @return beneficiary The investor address whose `amount` of tokens in this order belong to,
   /// amount The amount of tokens has been locked in this order,
-  /// releaseOnBlock The block number when tokens can be redeem or claimed from the time-locked contract,
+  /// releaseOnBlock The block timestamp when tokens can be redeem or claimed from the time-locked contract,
   /// claimed The status of this order whether it's claimed or not.
   function orders(uint256 id) external view returns(
     address beneficiary,
