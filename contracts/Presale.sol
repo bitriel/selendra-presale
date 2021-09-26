@@ -54,8 +54,8 @@ contract Presale is IPreIDOBase, Ownable {
   uint256 public immutable notAfterBlock;
 
   constructor(address _token, address _priceFeed, uint256 _notBeforeBlock, uint256 _notAfterBlock) {
-    require(_token != address(0) && _priceFeed != address(0), "ICA"); // invalid contract address
-    require(_notBeforeBlock >= block.timestamp && _notAfterBlock > _notBeforeBlock, "IPS"); // invalid presale schedule
+    require(_token != address(0) && _priceFeed != address(0), "invalid contract address"); // ICA
+    require(_notBeforeBlock >= block.timestamp && _notAfterBlock > _notBeforeBlock, "invalid presale schedule"); // IPS 
     token = IERC20Metadata(_token);
     priceFeed = AggregatorV2V3Interface(_priceFeed);
     notBeforeBlock = _notBeforeBlock;
@@ -79,8 +79,8 @@ contract Presale is IPreIDOBase, Ownable {
 
   function orderToken(address fundsAddress, uint256 fundsAmount, uint8 discountsRate) external inPresalePeriod {
     TokenInfo storage tokenInfo = supportedTokens[fundsAddress];
-    require(fundsAmount > 0, "IV"); // invalid value
-    require(tokenInfo.priceFeed != address(0), "FNS"); // the funds is not supported for purchase some token
+    require(fundsAmount > 0, "invalid token amount value"); // ITA
+    require(tokenInfo.priceFeed != address(0), "the tokens is not supported for purchase some token"); // TNS
 
     tokenInfo.rate = getPriceToken(fundsAddress);
     IERC20(fundsAddress).safeTransferFrom(msg.sender, address(this), fundsAmount);
@@ -89,10 +89,10 @@ contract Presale is IPreIDOBase, Ownable {
   }
 
   function _order(uint amount, uint8 _amountDecimals, int256 price, uint8 _priceDecimals, uint8 discountsRate) internal {
-    require(amount.mul(uint256(price)).div(10 ** (_amountDecimals + _priceDecimals)) >= minInvestment, "LMI"); // less than mininum investment
+    require(amount.mul(uint256(price)).div(10 ** (_amountDecimals + _priceDecimals)) >= minInvestment, "less than mininum investment"); // LMI
     
     uint256 lockDuration = discountsLock[discountsRate];
-    require(lockDuration >= MIN_LOCK, "NDR"); // lock duration not exist or lower than minimum lock
+    require(lockDuration >= MIN_LOCK, "lock duration not exist or lower than minimum lock"); // NDR
 
     uint256 releaseOnBlock = block.timestamp.add(lockDuration);
     uint256 tokenPriceX4 = 300 * (100 - discountsRate) / 100; // 300 = 0.03(default price) * 10^4
@@ -104,7 +104,7 @@ contract Presale is IPreIDOBase, Ownable {
     } else {
       distributeAmount = distributeAmount.div(10 ** (lowerPow - upperPow));
     }
-    require(totalDistributed + distributeAmount <= token.balanceOf(address(this)), "NET"); // not enough supply tokens to be distributed
+    require(totalDistributed + distributeAmount <= token.balanceOf(address(this)), "not enough supply tokens to be distributed"); // NET
 
     orders[++latestOrderId] = OrderInfo(msg.sender, distributeAmount, releaseOnBlock, false);
     totalDistributed = totalDistributed.add(distributeAmount);
@@ -115,13 +115,13 @@ contract Presale is IPreIDOBase, Ownable {
   }
 
   function redeem(uint256 orderId) external {
-    require(orderId <= latestOrderId, "IOI"); // incorrect order id
+    require(orderId <= latestOrderId, "incorrect order id"); // IOI
 
     OrderInfo storage orderInfo = orders[orderId];
-    require(msg.sender == orderInfo.beneficiary, "NOO"); // not order beneficiary
-    require(orderInfo.amount > 0, "ITA"); // insufficient token amount to redeem
-    require(block.timestamp >= orderInfo.releaseOnBlock, "TIL"); // tokens is still in locked
-    require(!orderInfo.claimed, "TAC"); // tokens is already claimed
+    require(msg.sender == orderInfo.beneficiary, "not order beneficiary"); // NOO
+    require(orderInfo.amount > 0, "insufficient token amount to redeem"); // ITA
+    require(block.timestamp >= orderInfo.releaseOnBlock, "tokens is still in locked"); // TIL
+    require(!orderInfo.claimed, "tokens is already claimed"); // TAC
 
     uint256 amount = safeTransferToken(orderInfo.beneficiary, orderInfo.amount);
     orderInfo.claimed = true;
@@ -144,24 +144,24 @@ contract Presale is IPreIDOBase, Ownable {
 
   function collectFunds(address fundsAddress) external onlyOwner afterPresalePeriod {
     uint256 amount = IERC20(fundsAddress).balanceOf(address(this));
-    require(amount > 0, "NEC"); // not enough to collect
+    require(amount > 0, "not enough to collect"); // NEC
     IERC20(fundsAddress).transfer(msg.sender, amount);
   }
 
   function collect() external onlyOwner afterPresalePeriod {
     uint256 amount = address(this).balance;
-    require(amount > 0, "NEC"); // not enough to collect
+    require(amount > 0, "not enough to collect"); // NEC
     payable(msg.sender).transfer(amount);
   }
 
   function setMinInvestment(uint256 _minInvestment) external onlyOwner beforePresaleEnd {
-    require(_minInvestment > 0, "IV"); // Invalid value
+    require(_minInvestment > 0, "Invalid input value"); // IIV
     minInvestment = _minInvestment;
   }
 
   function setSupportedToken(address _token, address _priceFeed) external onlyOwner beforePresaleEnd {
-    require(_token != address(0), "ITA"); // invalid token address
-    require(_priceFeed != address(0), "IOPA"); // invalid oracle price feed address
+    require(_token != address(0), "invalid token address"); // ITA
+    require(_priceFeed != address(0), "invalid oracle price feed address"); // IOPA
 
     supportedTokens[_token].priceFeed = _priceFeed;
     supportedTokens[_token].decimals = AggregatorV2V3Interface(_priceFeed).decimals();
@@ -180,18 +180,18 @@ contract Presale is IPreIDOBase, Ownable {
   }
 
   modifier inPresalePeriod {
-    require(block.timestamp > notBeforeBlock, "PNS"); // Pre-sale not yet start
-    require(block.timestamp < notAfterBlock, "PEN"); // Pre-sale is end now
+    require(block.timestamp > notBeforeBlock, "Pre-sale is not yet start"); // PNS
+    require(block.timestamp < notAfterBlock, "Pre-sale is end now"); // PEN 
     _;
   }
 
   modifier afterPresalePeriod {
-    require(block.timestamp > notAfterBlock, "PNE"); // Pre-sale is not yet end
+    require(block.timestamp > notAfterBlock, "Pre-sale is not yet end"); // PNE
     _;
   }
 
   modifier beforePresaleEnd {
-    require(block.timestamp < notAfterBlock, "PEN"); // Pre-sale is end now
+    require(block.timestamp < notAfterBlock, "Pre-sale is end now"); // PEN
     _;
   }
 }

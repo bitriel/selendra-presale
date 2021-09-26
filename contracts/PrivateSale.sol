@@ -41,7 +41,7 @@ contract PrivateSale is IPreIDOBase, Ownable {
   uint256 public fundsRaisedX8;
 
   constructor(address _token) {
-    require(_token != address(0), "ITA"); // invalid token address
+    require(_token != address(0), "invalid token address"); // ITA
     token = IERC20Metadata(_token);
   }
 
@@ -51,15 +51,15 @@ contract PrivateSale is IPreIDOBase, Ownable {
   }
 
   function order(address recipient, uint256 amount) external onlyOwner {
-    require(recipient != address(0), "IIA"); // invalid investor address
-    require(amount > 0, "ITA"); // invalid token amount
+    require(recipient != address(0), "invalid investor address"); // IIA
+    require(amount > 0, "invalid token amount"); // ITA
 
     uint256 releaseOnBlock = block.timestamp.add(LOCK_DURATION);
     // 4: priceDecimals, 8: fundsRaisedDecimals
     uint256 funds = amount.mul(TOKEN_PRICEX4).div(10 ** (token.decimals() + 4 - 8));
 
     token.safeTransferFrom(msg.sender, address(this), amount);
-    require(token.balanceOf(address(this)) >= amount, "NEB"); // not enough tokens balance
+    require(token.balanceOf(address(this)) >= amount, "not enough tokens balance"); // NEB
 
     orders[++latestOrderId] = OrderInfo(recipient, amount, releaseOnBlock, false);
     totalDistributed = totalDistributed.add(amount);
@@ -71,13 +71,13 @@ contract PrivateSale is IPreIDOBase, Ownable {
   }
 
   function redeem(uint256 orderId) external {
-    require(orderId <= latestOrderId, "IOI"); // incorrect order id
+    require(orderId <= latestOrderId, "incorrect order id"); // IOI
 
     OrderInfo storage orderInfo = orders[orderId];
-    require(msg.sender == orderInfo.beneficiary || msg.sender == owner(), "NOO"); // not order beneficiary or owner of contract
-    require(orderInfo.amount > 0, "ITA"); // insufficient token amount to redeem
-    require(block.timestamp >= orderInfo.releaseOnBlock, "TIL"); // tokens is still in locked
-    require(!orderInfo.claimed, "TAC"); // tokens is already claimed
+    require(msg.sender == orderInfo.beneficiary || msg.sender == owner(), "not order beneficiary or owner of contract"); // NOO
+    require(orderInfo.amount > 0, "insufficient token amount to redeem"); // ITA
+    require(block.timestamp >= orderInfo.releaseOnBlock, "tokens is still in locked"); // TIL
+    require(!orderInfo.claimed, "tokens is already claimed"); // TAC
     
     token.safeTransfer(orderInfo.beneficiary, orderInfo.amount);
     orderInfo.claimed = true;
@@ -87,8 +87,8 @@ contract PrivateSale is IPreIDOBase, Ownable {
   }
 
   function rewardInvestor(address _to, uint256 _amount) public onlyOwner {
-    require(_to != address(0), "IAA"); // invalid account address
-    require(_amount > 0, "IAV"); // invalid amount value
+    require(_to != address(0), "invalid account address"); // IAA
+    require(_amount > 0, "invalid amount value"); // IAV
     
     token.safeTransferFrom(msg.sender, _to, _amount);
   }
