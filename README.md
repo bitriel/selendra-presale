@@ -10,6 +10,7 @@ first of all, we need to install all needed-dev dependencies through this comman
 yarn install
 ```
 
+next, create an **.env** file in the root of project, same keys as **.env.example** and set those values depend on your needs.
 then, compile both contracts to see if no errors, and the size of those contracts:
 
 ```shell
