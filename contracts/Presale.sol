@@ -79,6 +79,11 @@ contract Presale is IPreIDOBase, Ownable {
         discountsLock[30] = 3 * MIN_LOCK;
     }
 
+    receive() external payable inPresalePeriod {
+        int256 price = getPrice();
+        _order(msg.value, 18, price, priceFeed.decimals(), 10); // default to 10% discount rate
+    }
+
     function investorOrderIds(address investor)
         external
         view
