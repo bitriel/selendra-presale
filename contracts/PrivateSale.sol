@@ -22,7 +22,7 @@ contract PrivateSale is IPreIDOBase, Ownable {
     }
 
     /// @dev the default lock duration for private sale
-    uint256 public constant LOCK_DURATION = 730 days; // 2 years;
+    uint256 public constant LOCK_DURATION = 730 days; // 730 days = 2 years;
     /// @dev the default token price for private sale in 4 decimals
     uint256 public constant TOKEN_PRICEX4 = 165; // // 165 = 0.0165 * 10^4
     /// @dev balanceOf[investor] = balance
