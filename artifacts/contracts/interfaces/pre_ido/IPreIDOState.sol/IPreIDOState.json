@@ -52,7 +52,7 @@
       "name": "orders",
       "outputs": [
         {
-          "internalType": "address",
+          "internalType": "address payable",
           "name": "beneficiary",
           "type": "address"
         },

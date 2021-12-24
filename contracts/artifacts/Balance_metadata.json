@@ -1,0 +1,65 @@
+{
+	"compiler": {
+		"version": "0.7.6+commit.7338295f"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "con",
+						"type": "address"
+					}
+				],
+				"name": "balance",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/Balance.sol": "Balance"
+		},
+		"evmVersion": "istanbul",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/Balance.sol": {
+			"keccak256": "0x1651d7e6a1a34277120f62a756dea1109eada6689af8ca2ac816b7577b26b2d0",
+			"license": "GPL-3.0",
+			"urls": [
+				"bzz-raw://7fdc42b6315c3193a6dcaf60868ebb5b5faa9aea7a20907e556413eaf597153e",
+				"dweb:/ipfs/QmVo7FExSQFDi3uSPxAwRjkK1Y51MKDu1QtU3NJ5UhpmPA"
+			]
+		}
+	},
+	"version": 1
+}

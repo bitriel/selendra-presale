@@ -21,7 +21,7 @@ contract Presale is IPreIDOBase, Ownable {
         uint256 raisedAmount; // how many tokens has been raised so far
     }
     struct OrderInfo {
-        address beneficiary;
+        address payable beneficiary;
         uint256 amount;
         uint256 releaseOnBlock;
         bool claimed;
@@ -45,7 +45,7 @@ contract Presale is IPreIDOBase, Ownable {
     /// @notice The minimum investment funds for purchasing tokens in USD
     uint256 public minInvestment;
     /// @notice The token used for pre-sale
-    IERC20Metadata public immutable override token;
+    IERC20Metadata public immutable token;
     /// @dev The price feed address of native token
     AggregatorV2V3Interface internal immutable priceFeed;
     /// @notice The block timestamp before starting the presale purchasing

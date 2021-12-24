@@ -12,7 +12,7 @@ interface IPreIDOState {
   /// releaseOnBlock The block timestamp when tokens can be redeem or claimed from the time-locked contract,
   /// claimed The status of this order whether it's claimed or not.
   function orders(uint256 id) external view returns(
-    address beneficiary,
+    address payable beneficiary,
     uint256 amount,
     uint256 releaseOnBlock,
     bool claimed
