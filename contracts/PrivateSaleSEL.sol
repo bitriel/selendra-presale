@@ -19,7 +19,7 @@ contract PrivateSaleSEL is IPreIDOBase, OwnableUpgradeable, UUPSUpgradeable {
     }
 
     /// @dev the default lock duration for private sale
-    uint256 public constant LOCK_DURATION = 180; // 180 days = 6 months;
+    uint256 public constant LOCK_DURATION = 180 days; // 180 days = 6 months;
     /// @dev the default token price for private sale in 4 decimals
     // uint256 public constant TOKEN_PRICEX4 = 165; // // 165 = 0.0165 * 10^4
     /// @dev balanceOf[investor] = balance
