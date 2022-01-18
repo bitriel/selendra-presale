@@ -1,6 +1,6 @@
 {
   "name": "@bitriel/selendra-presale",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "license": "GPL-3.0",
   "description": "Pre-Sale Smart Contracts on Bitriel Protocol",
   "homepage": "https://dapp.bitriel.com/sel-pre-sale",
@@ -27,11 +27,13 @@
     "docs": "hardhat docgen"
   },
   "devDependencies": {
-    "@chainlink/contracts": "^0.2.1",
+    "@chainlink/contracts": "^0.3.1",
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers",
     "@nomiclabs/hardhat-etherscan": "^2.1.6",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
-    "@openzeppelin/contracts": "3.4.1-solc-0.7",
+    "@openzeppelin/contracts": "^4.4.2",
+    "@openzeppelin/contracts-upgradeable": "^4.4.2",
+    "@openzeppelin/hardhat-upgrades": "^1.13.0",
     "@typechain/ethers-v5": "^7.0.1",
     "@typechain/hardhat": "^2.3.0",
     "@types/chai": "^4.2.21",

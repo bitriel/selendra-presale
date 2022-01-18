@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.7.0;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import "./interfaces/IERC20Metadata.sol";
 import "./interfaces/IPreIDOBase.sol";
 
-contract PrivateSaleSEL is IPreIDOBase, Ownable {
+contract PrivateSaleSEL is IPreIDOBase, OwnableUpgradeable, UUPSUpgradeable {
     using SafeMath for uint256;
 
     struct OrderInfo {
@@ -19,7 +19,7 @@ contract PrivateSaleSEL is IPreIDOBase, Ownable {
     }
 
     /// @dev the default lock duration for private sale
-    uint256 public constant LOCK_DURATION = 180 days; // 180 days = 6 months;
+    uint256 public constant LOCK_DURATION = 180; // 180 days = 6 months;
     /// @dev the default token price for private sale in 4 decimals
     // uint256 public constant TOKEN_PRICEX4 = 165; // // 165 = 0.0165 * 10^4
     /// @dev balanceOf[investor] = balance
@@ -29,7 +29,16 @@ contract PrivateSaleSEL is IPreIDOBase, Ownable {
     /// @dev orders[orderId] = OrderInfo
     mapping(uint256 => OrderInfo) public override orders;
     /// @dev The latest order id for tracking order info
-    uint256 public orderCount = 0;
+    uint256 public orderCount;
+
+    receive() external payable {}
+
+    function initialize() external initializer {
+        __Ownable_init();
+        orderCount = 0;
+    }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     function investorOrderIds(address investor)
         external
@@ -70,7 +79,7 @@ contract PrivateSaleSEL is IPreIDOBase, Ownable {
 
         OrderInfo storage orderInfo = orders[orderId];
         require(
-            msg.sender == orderInfo.beneficiary || msg.sender == owner(),
+            _msgSender() == orderInfo.beneficiary || _msgSender() == owner(),
             "not order beneficiary or owner of contract"
         ); // NOO
         require(
@@ -79,7 +88,7 @@ contract PrivateSaleSEL is IPreIDOBase, Ownable {
         ); // TIL
         require(!orderInfo.claimed, "tokens are ready to be claimed"); // TAC
 
-        Address.sendValue(orderInfo.beneficiary, orderInfo.amount);
+        orderInfo.beneficiary.transfer(orderInfo.amount);
         orderInfo.claimed = true;
         balanceOf[orderInfo.beneficiary] = balanceOf[orderInfo.beneficiary].sub(
             orderInfo.amount

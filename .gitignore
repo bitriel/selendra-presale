@@ -4,10 +4,11 @@ types
 package-lock.json
 .env
 .DS_Store
+.openzeppelin
 
 #Hardhat files
 cache
-# artifacts
+artifacts
 abi
 coverage
 coverage.json

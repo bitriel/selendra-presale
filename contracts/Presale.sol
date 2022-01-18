@@ -2,9 +2,9 @@
 pragma solidity >=0.7.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "@chainlink/contracts/src/v0.7/interfaces/AggregatorV2V3Interface.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV2V3Interface.sol";
 
 import "./interfaces/IERC20Metadata.sol";
 import "./interfaces/IPreIDOBase.sol";
@@ -164,7 +164,7 @@ contract Presale is IPreIDOBase, Ownable {
         ); // NET
 
         orders[++latestOrderId] = OrderInfo(
-            msg.sender,
+            payable(msg.sender),
             distributeAmount,
             releaseOnBlock,
             false

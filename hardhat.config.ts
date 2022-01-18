@@ -7,14 +7,13 @@ import "solidity-coverage"
 import "@nomiclabs/hardhat-etherscan";
 import "@nomiclabs/hardhat-ethers"
 import '@typechain/hardhat'
+import '@openzeppelin/hardhat-upgrades';
 import "hardhat-contract-sizer";
 import "hardhat-deploy"
 import "hardhat-gas-reporter"
 import "hardhat-docgen"
 
-const accounts = {
-  mnemonic: process.env.MNEMONIC,
-}
+const accounts = process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [];
 
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
@@ -117,7 +116,7 @@ const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
-        version: "0.7.6",
+        version: "0.8.4",
         settings: {
           optimizer: {
             enabled: true,
