@@ -93,8 +93,6 @@ const config: HardhatUserConfig = {
       chainId: 97,
       live: true,
       saveDeployments: true,
-      tags: ["staging"],
-      gasMultiplier: 2,
     },
     "selendra-testnet": {
       url: "https://rpc.testnet.selendra.org",
