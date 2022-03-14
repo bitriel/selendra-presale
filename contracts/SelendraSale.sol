@@ -12,40 +12,40 @@ contract SelendraSale is Ownable {
   using SafeMath for uint256;
   using SafeERC20 for IERC20Metadata;
 
-  event TokenOrdered(uint256 id, address senderAddress, string selendraAddress, uint256 tokenAmount);
+  event TokenOrdered(uint256 id, address senderAddress, address tokenAddress, string selendraAddress, uint256 selendraAmount);
 
+  struct TokenInfo {
+    address priceFeed;
+    uint8 decimals;
+  }
   struct OrderInfo {
     address senderAddress;
+    address tokenAddress;
     string selendraAddress;
-    uint256 amount;
+    uint256 selendraAmount;
   }
 
   /// @dev balanceOf[investor] = balance
   mapping(address => uint256) public balanceOf;
+  /// @dev supportedTokens[tokenAddress] = TokenInfo
+  mapping(address => TokenInfo) public supportedTokens;
   /// @dev orders[orderId] = OrderInfo
   OrderInfo[] public orders;
-  /// @notice The minimum investment funds for purchasing tokens in USD
+  /// @notice The minimum investment funds per purchasing order tokens in USD
   uint256 public immutable minInvestment;
-  /// @notice The maximum investment funds for purchasing tokens in USD
+  /// @notice The maximum investment funds per purchasing order tokens in USD
   uint256 public immutable maxInvestment;
-  /// @notice The token used for pre-sale
-  IERC20Metadata public immutable usdt;
   /// @dev The price feed address of native token
   AggregatorV2V3Interface internal immutable priceFeed;
   /// @notice The block timestamp after ending the presale purchasing
   uint256 public immutable notAfterBlock;
 
   constructor(
-    address _usdt,
     address _priceFeed,
     uint256 _minInvestment,
     uint256 _maxInvestment,
     uint256 _notAfterBlock
   ) {
-    require(
-      _usdt != address(0) && _priceFeed != address(0),
-      "invalid contract address"
-    ); // ICA
     require(
       _minInvestment < _maxInvestment, 
       "invalid investment amount"
@@ -54,21 +54,28 @@ contract SelendraSale is Ownable {
       _notAfterBlock > block.timestamp,
       "invalid presale schedule"
     ); // IPS
-    usdt = IERC20Metadata(_usdt);
     priceFeed = AggregatorV2V3Interface(_priceFeed);
     minInvestment = _minInvestment;
     maxInvestment = _maxInvestment;
     notAfterBlock = _notAfterBlock;
   }
 
-  receive() external payable {}
+  function order(string memory selendraAddress) external payable {
+    int256 price = getPrice();
+    _order(address(0), 18, price, priceFeed.decimals(), selendraAddress, msg.value); 
+  }
 
-  function order(string memory selendraAddress, uint amount) external inSalePeriod {
-    require(amount > 0, "invalid token amount"); // ITA
-    AggregatorV2V3Interface _priceFeed = priceFeed;
-    int256 price = _priceFeed.latestAnswer();
+  function order(address token, uint256 amount, string memory selendraAddress) external isTokenSupported(token) {
+    int256 price = getPrice(token);
+    uint8 amountDecimals = IERC20Metadata(token).decimals();
+    uint8 priceDecimals = supportedTokens[token].decimals;
+    IERC20Metadata(token).safeTransferFrom(msg.sender, address(this), amount);
+    _order(token, amountDecimals, price, priceDecimals, selendraAddress, amount);
+  }
+
+  function _order(address token, uint8 amountDecimals, int256 price, uint8 priceDecimals, string memory selendraAddress, uint256 amount) private inSalePeriod {
     uint256 amountInUsd = amount.mul(uint256(price)).div(
-      10**(usdt.decimals() + _priceFeed.decimals())
+      10**(amountDecimals + priceDecimals)
     );
 
     require(
@@ -84,24 +91,44 @@ contract SelendraSale is Ownable {
     uint256 selendraAmount = amountInUsd.mul(10**22).div(300); // 300 = 0.03(default price) * 10^4, 22 = 18(token decimals) + 4
     orders.push(OrderInfo({
       senderAddress: msg.sender,
+      tokenAddress: token,
       selendraAddress: selendraAddress,
-      amount: selendraAmount
+      selendraAmount: selendraAmount
     }));
     balanceOf[msg.sender] = balanceOf[msg.sender].add(selendraAmount);
-    usdt.safeTransferFrom(
-      msg.sender,
-      address(this),
-      amount
-    );
 
-    emit TokenOrdered(orderId, msg.sender, selendraAddress, selendraAmount);
+    emit TokenOrdered(orderId, msg.sender, token, selendraAddress, selendraAmount);
   }
 
   function claim() external onlyOwner afterSalePeriod {
     uint256 amountBnb = address(this).balance;
-    uint256 amountUsdt = usdt.balanceOf(address(this));
     payable(msg.sender).transfer(amountBnb);
-    usdt.transfer(msg.sender, amountUsdt);
+  }
+
+  function claim(address token) external onlyOwner afterSalePeriod isTokenSupported(token) {
+    uint256 tokenAmount = IERC20Metadata(token).balanceOf(address(this));
+    require(IERC20Metadata(token).transfer(payable(msg.sender), tokenAmount));
+  }
+
+  function setSupportedToken(address _token, address _priceFeed)
+    external
+    onlyOwner
+    inSalePeriod
+  {
+    require(_token != address(0), "invalid token address"); // ITA
+    require(_priceFeed != address(0), "invalid oracle price feed address"); // IOPA
+
+    supportedTokens[_token].priceFeed = _priceFeed;
+    supportedTokens[_token].decimals = AggregatorV2V3Interface(_priceFeed)
+        .decimals();
+  }
+
+  function getPrice() public view returns(int256 price) {
+    price = priceFeed.latestAnswer();
+  }
+
+  function getPrice(address token) public view isTokenSupported(token) returns (int256 price) {
+    price = AggregatorV2V3Interface(supportedTokens[token].priceFeed).latestAnswer();
   }
 
   modifier inSalePeriod() {
@@ -111,6 +138,11 @@ contract SelendraSale is Ownable {
 
   modifier afterSalePeriod() {
     require(block.timestamp > notAfterBlock, "sale is still ongoing"); // PNE
+    _;
+  }
+
+  modifier isTokenSupported(address token) {
+    require(supportedTokens[token].priceFeed != address(0), "token is not supported");
     _;
   }
 }
