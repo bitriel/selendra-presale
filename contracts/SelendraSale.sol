@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity >=0.7.0;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -61,14 +61,12 @@ contract SelendraSale is Ownable {
   }
 
   function order(string memory selendraAddress) external payable {
-    int256 price = getPrice();
-    _order(address(0), 18, price, priceFeed.decimals(), selendraAddress, msg.value); 
+    (, int256 price, uint8 amountDecimals, uint8 priceDecimals) = estimateReturn(address(0), msg.value);
+    _order(address(0), amountDecimals, price, priceDecimals, selendraAddress, msg.value); 
   }
 
-  function order(address token, uint256 amount, string memory selendraAddress) external isTokenSupported(token) {
-    int256 price = getPrice(token);
-    uint8 amountDecimals = IERC20Metadata(token).decimals();
-    uint8 priceDecimals = supportedTokens[token].decimals;
+  function order(address token, uint256 amount, string memory selendraAddress) external {
+    (, int256 price, uint8 amountDecimals, uint8 priceDecimals) = estimateReturn(token, amount);
     IERC20Metadata(token).safeTransferFrom(msg.sender, address(this), amount);
     _order(token, amountDecimals, price, priceDecimals, selendraAddress, amount);
   }
@@ -125,10 +123,31 @@ contract SelendraSale is Ownable {
 
   function getPrice() public view returns(int256 price) {
     price = priceFeed.latestAnswer();
+    return price;
   }
 
-  function getPrice(address token) public view isTokenSupported(token) returns (int256 price) {
+  function getPrice(address token) public view isTokenSupported(token) returns(int256 price) {
     price = AggregatorV2V3Interface(supportedTokens[token].priceFeed).latestAnswer();
+    return price;
+  }
+
+  function estimateReturn(address token, uint256 amount) public view returns(uint256 selendraAmount, int256 price, uint8 amountDecimals, uint8 priceDecimals) {
+    require(token == address(0) || _isTokenSupported(token), "token is not supported");
+
+    if(token == address(0)) {
+      price = getPrice();
+      amountDecimals = 18;
+      priceDecimals = priceFeed.decimals();
+    } else {
+      price = getPrice(token);
+      amountDecimals = IERC20Metadata(token).decimals();
+      priceDecimals = AggregatorV2V3Interface(supportedTokens[token].priceFeed).decimals();
+    }
+
+    uint256 amountInUsd = amount.mul(uint256(price)).div(
+      10**(amountDecimals + priceDecimals)
+    );
+    selendraAmount = amountInUsd.mul(10**22).div(300); // 300 = 0.03(default price) * 10^4, 22 = 18(token decimals) + 4
   }
 
   modifier inSalePeriod() {
@@ -141,8 +160,12 @@ contract SelendraSale is Ownable {
     _;
   }
 
+  function _isTokenSupported(address token) private view returns(bool isTrue) {
+    return supportedTokens[token].priceFeed != address(0);
+  }
+
   modifier isTokenSupported(address token) {
-    require(supportedTokens[token].priceFeed != address(0), "token is not supported");
+    require(_isTokenSupported(token), "token is not supported");
     _;
   }
 }
