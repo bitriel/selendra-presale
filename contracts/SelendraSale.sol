@@ -65,7 +65,7 @@ contract SelendraSale is Ownable {
     _order(address(0), amountDecimals, price, priceDecimals, selendraAddress, msg.value); 
   }
 
-  function order(address token, uint256 amount, string memory selendraAddress) external {
+  function orderToken(address token, uint256 amount, string memory selendraAddress) external {
     (, int256 price, uint8 amountDecimals, uint8 priceDecimals) = estimateReturn(token, amount);
     IERC20Metadata(token).safeTransferFrom(msg.sender, address(this), amount);
     _order(token, amountDecimals, price, priceDecimals, selendraAddress, amount);
