@@ -73,20 +73,20 @@ contract SelendraSale is Ownable {
 
   function _order(address token, uint8 amountDecimals, int256 price, uint8 priceDecimals, string memory selendraAddress, uint256 amount) private inSalePeriod {
     uint256 amountInUsd = amount.mul(uint256(price)).div(
-      10**(amountDecimals + priceDecimals)
+      10**priceDecimals
     );
 
     require(
-      amountInUsd >= minInvestment,
+      amountInUsd >= minInvestment * 10**amountDecimals,
       "the investment amount does not reach the minimum amount required"
     ); // LMI
     require(
-      amountInUsd <= maxInvestment,
+      amountInUsd <= maxInvestment * 10**amountDecimals,
       "the investment amount exceed the maximum amount required"
     ); // LMI
 
     uint256 orderId = orders.length;
-    uint256 selendraAmount = amountInUsd.mul(10**22).div(300); // 300 = 0.03(default price) * 10^4, 22 = 18(token decimals) + 4
+    uint256 selendraAmount = amountInUsd.mul(10**(22 - amountDecimals)).div(300); // 300 = 0.03(default price) * 10^4, 22 = 18(selendra token decimals) + 4
     orders.push(OrderInfo({
       senderAddress: msg.sender,
       tokenAddress: token,
@@ -144,10 +144,12 @@ contract SelendraSale is Ownable {
       priceDecimals = AggregatorV2V3Interface(supportedTokens[token].priceFeed).decimals();
     }
 
-    uint256 amountInUsd = amount.mul(uint256(price)).div(
-      10**(amountDecimals + priceDecimals)
-    );
-    selendraAmount = amountInUsd.mul(10**22).div(300); // 300 = 0.03(default price) * 10^4, 22 = 18(token decimals) + 4
+    // 300 = 0.03(default price) * 10^4, 22 = 18(token decimals) + 4
+    if(amountDecimals + priceDecimals >= 22) { 
+      selendraAmount = amount.mul(uint256(price)).div(300 * 10**(amountDecimals + priceDecimals - 22)); 
+    } else {
+      selendraAmount = amount.mul(uint256(price).mul(10**(22 - (amountDecimals + priceDecimals)))).div(300); 
+    }
   }
 
   modifier inSalePeriod() {
