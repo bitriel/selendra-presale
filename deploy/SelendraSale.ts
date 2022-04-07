@@ -78,7 +78,11 @@ const deploy: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         args.priceFeed,
         args.minInvestment,
         args.maxInvestment,
-        "1648631306"
+        "1650016800",
+        3600,
+        200,
+        50,
+        2
       ],
       log: true,
       deterministicDeployment: false
